@@ -1,5 +1,14 @@
 package edu.visiontestlabs.pages;
 
-public class LoginPage {
+import org.openqa.selenium.WebDriver;
+
+import edu.visiontestlabs.base.PageBase;
+
+public class LoginPage extends PageBase{
+
+	public LoginPage(WebDriver driver) {
+		super(driver);
+		
+	}
 
 }

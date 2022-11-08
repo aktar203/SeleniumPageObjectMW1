@@ -1,5 +1,14 @@
 package edu.visiontestlabs.pages;
 
-public class RegistrationPage {
+import org.openqa.selenium.WebDriver;
+
+import edu.visiontestlabs.base.PageBase;
+
+public class RegistrationPage extends PageBase{
+
+	public RegistrationPage(WebDriver driver) {
+		super(driver);
+		
+	}
 
 }
