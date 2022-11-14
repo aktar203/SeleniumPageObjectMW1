@@ -21,10 +21,11 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 public class PageBase {
 	
 	protected WebDriver driver;
-	WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(30));
+	WebDriverWait wait;
 
     public PageBase(WebDriver driver){
         this.driver = driver;
+        wait = new WebDriverWait(driver, Duration.ofSeconds(30));
     }
 
     public void delayFor(int secInMili){

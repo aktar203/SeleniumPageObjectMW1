@@ -1,134 +1,207 @@
 package edu.visiontestlabs.base;
 
+import org.openqa.selenium.Platform;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.ie.InternetExplorerDriver;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
+
+import io.github.bonigarcia.wdm.managers.ChromeDriverManager;
+import io.github.bonigarcia.wdm.managers.FirefoxDriverManager;
+
 import java.net.MalformedURLException;
 import java.net.URL;
 
 public class DriverFactory {
+	private static DriverFactory instance = null;
+	private static String browser = null;
+	private ThreadLocal<WebDriver> driverCollection = new ThreadLocal<WebDriver>();
 	
-	public static final String USERNAME = "iqbalchowdhury1";
-    public static final String AUTOMATE_KEY = "nD1DvzLsmuLTBxtL388S";
-    public static final String REMOTE_URL = "https://" + USERNAME + ":" + AUTOMATE_KEY + "@hub-cloud.browserstack.com/wd/hub";
-
-
-
-    private DriverFactory(){
-        //Do-nothing..Do not allow to initialize this class from outside
+	private static final String AUTOMATE_USERNAME = "shiftqauser1";
+	private static final String AUTOMATE_ACCESS_KEY = "KqRYsSY1LcUwxif6AArC";
+	private static final String URL = "https://" + AUTOMATE_USERNAME + ":" + AUTOMATE_ACCESS_KEY + "@hub-cloud.browserstack.com/wd/hub";
+	
+	private static final String LOCAL_GRID_URL = "http://192.168.86.118:4444/wd/hub";
+	  
+	private DriverFactory(){
+		
     }
-    
-    private static DriverFactory instance = new DriverFactory();
 
-    public static DriverFactory getInstance()
-    {
+	public static DriverFactory getInstance(){  
+		String browserType = System.getenv("browser");
+		if(browserType == null) {
+			browserType = "CHROME";
+		}
+        instance = getInstance(browserType);
         return instance;
     }
 
-    //ThreadLocal<WebDriver> driver = new ThreadLocal<WebDriver>() // thread local driver object for webdriver
-    		ThreadLocal<WebDriver> driver = new ThreadLocal<WebDriver>()
-    {
-        @Override
-        protected WebDriver initialValue()
-        {
+	public static DriverFactory getInstance(String browserType) {
+		
+		if(browserType == null || browserType.length() == 0) {
+			throw new RuntimeException("Please setup browser as environment variable or send browser as a parameter");
+		}
+		else {
+			DriverFactory.browser = browserType;
+		}
+		
+        if (instance == null) {
+            instance = new DriverFactory();
+        }
 
-            URL SELENIUM_HUB = null;
-
-            try {
-                SELENIUM_HUB = new URL("http://10.10.30.140:4444/wd/hub");
-            } catch (MalformedURLException e) {
-                e.printStackTrace();
+        if(instance.driverCollection.get() == null) {
+        	WebDriver driver = null;
+            if(DriverFactory.browser.toUpperCase().contentEquals("CHROME")) {
+            	 ChromeDriverManager.chromedriver().setup();
+            	 ChromeOptions options = new ChromeOptions();
+            	 options.addArguments("--ignore-certificate-errors")
+                 		.addArguments("--whitelisted-ips=\"\"");
+                 driver = new ChromeDriver(options);
             }
+            else if(DriverFactory.browser.toUpperCase().contentEquals("CHROME-HEADLESS")) {
+           	    ChromeDriverManager.chromedriver().setup();
+	           	ChromeOptions options = new ChromeOptions();
+	            options.addArguments("--headless")
+	                    .addArguments("--disable-gpu")
+	                    .addArguments("--window-size=1920,1080")
+	                    .addArguments("--ignore-certificate-errors")
+	                    .addArguments("--whitelisted-ips=\"\"");
 
-            String driverName = ResourceFactory.getInstance().getProperty("DRIVER").toString();
-            if(driverName.toUpperCase().contentEquals("CHROME")){
-                //ChromeDriverManager.getInstance().setup();
-                String chromeBinayPath;
-                chromeBinayPath =  System.getProperty("user.dir") + "/src/main/resources/driver/32/chromedriver.exe";
-                System.setProperty("webdriver.chrome.driver", chromeBinayPath);
-                return new ChromeDriver();
+             //options.setBinary("/Path/to/specific/version/of/Google Chrome");
+             driver = new ChromeDriver(options);
 
+           }
+            else if(DriverFactory.browser.toUpperCase().contentEquals("LINUX-CHROME")) {
+				ChromeDriverManager.chromedriver().setup();
+				ChromeOptions options = new ChromeOptions();
+				options.addArguments("--no-sandbox"); // Bypass OS security model, MUST BE THE VERY FIRST OPTION
+				options.addArguments("--headless");
+				options.addArguments("start-maximized"); // open Browser in maximized mode
+				options.addArguments("disable-infobars"); // disabling infobars
+				options.addArguments("--disable-extensions"); // disabling extensions
+				options.addArguments("--disable-gpu"); // applicable to windows os only
+				options.addArguments("--disable-dev-shm-usage"); // overcome limited resource problems
+	           	options.addArguments("--ignore-certificate-errors");
+	           	options.addArguments("--whitelisted-ips=\"\"");
+	            
+	           	driver = new ChromeDriver(options);
+	        }
+            else if(DriverFactory.browser.toUpperCase().contentEquals("CHROME-GRID")) {
+            	ChromeOptions options = new ChromeOptions();
+           	 	options.addArguments("--ignore-certificate-errors")
+                		.addArguments("--whitelisted-ips=\"\"");
+           	 
+            	DesiredCapabilities caps = new DesiredCapabilities();
+            	caps.setPlatform(Platform.ANY);
+                caps.setBrowserName("chrome");
+                caps.setCapability("browser", "Chrome");
+                caps.setCapability("browser_version", "latest");
+                
+                caps.setCapability(ChromeOptions.CAPABILITY, options);
+                
+                try {
+					driver = new RemoteWebDriver(new URL(LOCAL_GRID_URL), caps);
+				} catch (MalformedURLException e) {
+					e.printStackTrace();
+				}
             }
-            else if(driverName.toUpperCase().contentEquals("IE")){
-                String ieBinayPath;
-                ieBinayPath = System.getProperty("user.dir") + "/src/main/resources/driver/32/IEDriverServer.exe";
-                System.setProperty("webdriver.ie.driver", ieBinayPath );
-                return new InternetExplorerDriver();
+            else if(DriverFactory.browser.toUpperCase().contentEquals("WIN-CHROME-CLOUD")) {
+            	ChromeOptions options = new ChromeOptions();
+           	 	options.addArguments("--ignore-certificate-errors")
+                		.addArguments("--whitelisted-ips=\"\"");
+           	 
+            	DesiredCapabilities caps = new DesiredCapabilities();
+            	caps.setCapability("os_version", "10");
+                caps.setCapability("resolution", "1920x1080");
+                caps.setCapability("browser", "Chrome");
+                caps.setCapability("browser_version", "latest");
+                caps.setCapability("os", "Windows");
+                caps.setCapability("name", "BStack-[Java] Sample Test"); // test name
+                caps.setCapability("build", "WIN-CHROME-CLOUD"); // CI/CD job or build name
+                
+                caps.setCapability(ChromeOptions.CAPABILITY, options);
+                
+                try {
+					driver = new RemoteWebDriver(new URL(URL), caps);
+				} catch (MalformedURLException e) {
+					e.printStackTrace();
+				}
+            }
+            else if(DriverFactory.browser.toUpperCase().contentEquals("WIN-EDGE-CLOUD")) {
+              	 
+            	DesiredCapabilities caps = new DesiredCapabilities();
+            	caps.setCapability("os_version", "10");
+                caps.setCapability("resolution", "1920x1080");
+                caps.setCapability("browser", "Edge");
+                caps.setCapability("browser_version", "latest");
+                caps.setCapability("os", "Windows");
+                caps.setCapability("name", "BStack-[Java] Sample Test"); // test name
+                caps.setCapability("build", "BStack Build Number 1"); // CI/CD job or build name	
+            	
+                try {
+					driver = new RemoteWebDriver(new URL(URL), caps);
+				} catch (MalformedURLException e) {
+					e.printStackTrace();
+				}
+            }
+            else if(DriverFactory.browser.toUpperCase().contentEquals("MAC-CHROME-CLOUD")) {
+            	ChromeOptions options = new ChromeOptions();
+           	 	options.addArguments("--ignore-certificate-errors")
+                		.addArguments("--whitelisted-ips=\"\"");
+           	 
+           	 	
+            	DesiredCapabilities caps = new DesiredCapabilities();
+                caps.setCapability("os_version", "Catalina");
+                caps.setCapability("resolution", "1920x1080");
+                caps.setCapability("browser", "Chrome");
+                caps.setCapability("browser_version", "latest");
+                caps.setCapability("os", "OS X");
+                caps.setCapability("name", "BStack-[Java] Sample Test"); // test name
+                caps.setCapability("build", "MAC-CHROME-CLOUD"); // CI/CD job or build name	
+                caps.setCapability(ChromeOptions.CAPABILITY, options);
+                
+                try {
+					driver = new RemoteWebDriver(new URL(URL), caps);
+				} catch (MalformedURLException e) {
+					e.printStackTrace();
+				}
+            }
+            else if(DriverFactory.browser.toUpperCase().contentEquals("FIREFOX")) {
+            	FirefoxDriverManager.firefoxdriver().arch64().setup();
+                FirefoxOptions options = new FirefoxOptions();
+                options.setCapability("marionette", true);
+                driver = new FirefoxDriver(options);
+            }
+            else{
+                throw new RuntimeException("Invalid browser name : " + browser);
             }
             
-            else if(driverName.toUpperCase().contentEquals("FIREFOX")){
-                return new FirefoxDriver();
-            }
-      
-			/*
-			 * else if(driverName.toUpperCase().contentEquals("R-FF")){ WebDriver driver =
-			 * null; DesiredCapabilities capabilities = DesiredCapabilities.firefox(); //
-			 * driver = new RemoteWebDriver(new
-			 * URL("http://10.10.30.35:4444/wd/hub"),capabilities); driver = new
-			 * RemoteWebDriver(SELENIUM_HUB,capabilities); return driver; }
-			 */
-			/*
-			 * else if(driverName.toUpperCase().contentEquals("R-CH")){ WebDriver driver =
-			 * null; DesiredCapabilities capabilities = DesiredCapabilities.chrome(); driver
-			 * = new RemoteWebDriver(SELENIUM_HUB,capabilities); return driver; }
-			 */
-            else if (driverName.toUpperCase().contentEquals("BS-FF")) {
-                DesiredCapabilities caps = new DesiredCapabilities();
-                caps.setCapability("browser", "Firefox");
-                caps.setCapability("browser_version", "46.0");
-                caps.setCapability("os", "Windows");
-                caps.setCapability("os_version", "7");
-                caps.setCapability("resolution", "1024x768");
-
-                caps.setCapability("browserstack.debug", "true");
-
-                WebDriver driver= null;
-                try {
-                    driver= new RemoteWebDriver(new URL(REMOTE_URL),caps);
-
-                } catch (MalformedURLException e) {
-                    e.printStackTrace();
-                }
-                return driver;
-            }
-            else if(driverName.toUpperCase().contentEquals("BS-IE")){
-                DesiredCapabilities caps = new DesiredCapabilities();
-
-                caps.setCapability("browser", "IE");
-                caps.setCapability("browser_version", "11.0");
-                caps.setCapability("os", "Windows");
-                caps.setCapability("os_version", "10");
-                caps.setCapability("resolution", "1280x1024");
-
-                caps.setCapability("browserstack.debug", "true");
-
-                WebDriver driver = null;
-                try {
-                    driver = new RemoteWebDriver(new URL(REMOTE_URL), caps);
-                } catch (MalformedURLException e) {
-                    e.printStackTrace();
-                }
-                return driver;
-            }
-            else {
-                return new FirefoxDriver(); // can be replaced with other browser drivers
-            }
+            instance.driverCollection.set(driver);
         }
-    };
-
-    public WebDriver getDriver() // call this method to get the driver object and launch the browser
-    {
-        return driver.get();
+        
+        return instance;
+	}
+	
+	public WebDriver getDriver() {
+        return driverCollection.get();
     }
 
-    public void removeDriver() // Quits the driver and closes the browser
-    {
-        driver.get().close();
-        driver.get().quit();
-        driver.remove();
+	public void quit() {
+        // Quits the driver and closes the browser
+        try {
+            driverCollection.get().quit();
+        }
+        catch(Exception ex){
+            System.out.println(ex.getMessage());
+        }
+        finally {
+            driverCollection.remove();
+        }
     }
+
 
 }

@@ -10,5 +10,8 @@ public class LoginPage extends PageBase{
 		super(driver);
 		
 	}
+	
+	// Elements
+	
 
 }

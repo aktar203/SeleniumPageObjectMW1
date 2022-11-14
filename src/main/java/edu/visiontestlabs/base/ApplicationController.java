@@ -27,10 +27,12 @@ public class ApplicationController {
         return driver;
     }
 
-    public void navigateToApplication(){
-        //driver.navigate().to(ResourceFactory.getInstance().getProperty("APP_URL").toString());
-    	driver.navigate().to("");
-    }
+	
+	  public void navigateToApplication(){
+	  driver.navigate().to(ResourceFactory.getInstance().getProperty("APP_URL").toString());
+	  
+	  }
+	 
 
 
     public HomePage homePage() {
