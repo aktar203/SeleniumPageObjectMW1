@@ -28,6 +28,9 @@ public class PageBase {
         wait = new WebDriverWait(driver, Duration.ofSeconds(30));
     }
 
+    public WebDriver getDriver() {
+    	return driver;
+    }
     public void delayFor(int secInMili){
         try {
             Thread.sleep(secInMili);
@@ -55,7 +58,7 @@ public class PageBase {
     }
     
     
-    public void verifyTextMessage(WebElement element, String expected) {
+    public void assertText(WebElement element, String expected) {
     	String actual = this.getText(element);
     	assertEquals(actual, expected);
     	

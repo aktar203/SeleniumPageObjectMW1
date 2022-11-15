@@ -8,10 +8,10 @@ import edu.visiontestlabs.pages.RegistrationPage;
 
 public class ApplicationController {
 	
-	protected WebDriver driver;
-    protected HomePage homePage;
-    protected LoginPage loginPage;
-    protected RegistrationPage registrationPage;
+	private WebDriver driver;
+    private HomePage homePage;
+    private LoginPage loginPage;
+    private RegistrationPage registrationPage;
     
 
     public ApplicationController(WebDriver driver) {

@@ -36,20 +36,21 @@ public class TestBase {
 		 * @Override protected ApplicationController initialValue() { return new
 		 * ApplicationController(DriverFactory.getInstance().getDriver()); } };
 		 */
-
-    
-
-    public ApplicationController heatClinic(){
-        //return threadedApplication.get();
-    	 return applicationController;
-    }
+   
 
    @AfterMethod
     public void tearDown(){
         DriverFactory.getInstance().quit();
     }
 
+   public ApplicationController heatClinic(){
+       //return threadedApplication.get();
+   	 return applicationController;
+   }
 	
-	
+   public WebDriver getDriver() {
+	   return driver;
+	   
+   }
 
 }
